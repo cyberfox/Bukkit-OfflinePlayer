@@ -1,9 +1,9 @@
-package me.confuser.offlineplayer.listeners;
+package com.cyberfox.offlineplayer.listeners;
 
 import java.util.HashMap;
 import java.util.UUID;
 
-import me.confuser.offlineplayer.OfflinePlayerFile;
+import com.cyberfox.offlineplayer.OfflinePlayerFile;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -19,7 +19,6 @@ public class InventoryEvents implements Listener {
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void serverTransfer(ServerCommandEvent event) {
-
 		if (event.getCommand().equalsIgnoreCase("stop")) {
 			for (Player player : Bukkit.getOnlinePlayers()) {
 				player.closeInventory();

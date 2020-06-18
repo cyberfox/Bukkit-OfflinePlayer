@@ -1,42 +1,40 @@
-package me.confuser.offlineplayer;
+package com.cyberfox.offlineplayer;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Vector;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
 
-import me.confuser.offlineplayer.commands.*;
+import com.cyberfox.offlineplayer.commands.*;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.command.CommandSender;
 
-public class CommandHandler implements CommandExecutor {
-	private HashMap<String, SubCommand> commands;
+public class CommandHandler implements CommandExecutor, TabCompleter {
+	private Map<String, SubCommand> commands;
 	private String commandName;
 	private OfflinePlayerPlugin plugin = OfflinePlayerPlugin.getPlugin();
+	private Map<String, OfflinePlayer> offlinePlayerMap;
 
-	public CommandHandler(String name) {
-		commands = new HashMap<String, SubCommand>();
+	public CommandHandler(String name, Map<String, OfflinePlayer> playerMap) {
+		commands = new HashMap<>();
 		commandName = name;
 
-		commands.put("fly", new FlyCommand());
-		commands.put("gm", new GameModeCommand());
-		commands.put("inv", new InventoryCommand());
-		commands.put("location", new LocationCommand());
-		commands.put("echest", new EnderChestCommand());
+		offlinePlayerMap = playerMap;
 
-		if (Bukkit.getServer().getPluginManager().getPlugin("Essentials") != null)
-			commands.put("socialspy", new SocialSpyCommand());
-
+		commands.put("inventory", new InventoryCommand());
+		commands.put("enderchest", new EnderChestCommand());
 	}
 
 	public void registerSubCommand(String commandName, SubCommand command) {
 		commands.put(commandName, command);
 	}
 
-	public HashMap<String, SubCommand> getCommands() {
+	public Map<String, SubCommand> getCommands() {
 		return commands;
 	}
 
@@ -51,6 +49,7 @@ public class CommandHandler implements CommandExecutor {
 
 				return true;
 			}
+
 			if (args[0].equalsIgnoreCase("help")) {
 				help(sender);
 				return true;
@@ -61,6 +60,13 @@ public class CommandHandler implements CommandExecutor {
 			l.addAll(Arrays.asList(args));
 			l.remove(0);
 			args = (String[]) l.toArray(new String[0]);
+			if(args.length > 0) {
+				String username = l.get(0);
+				if (offlinePlayerMap.get(username) != null) {
+					args[0] = offlinePlayerMap.get(username).getUniqueId().toString();
+					System.out.println("Converted " + username + " to " + l.get(0));
+				}
+			}
 
 			if (!commands.containsKey(sub)) {
 				sender.sendMessage(ChatColor.RED + "Command dosent exist.");
@@ -92,5 +98,31 @@ public class CommandHandler implements CommandExecutor {
 			if (p.hasPermission(plugin.getPermissionBase() + "." + v.permission()) && v.help(p) != null)
 				p.sendMessage(ChatColor.AQUA + v.help(p));
 		}
+	}
+
+	@Override
+	public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] strings) {
+		List<String> offers = new ArrayList<>();
+		if(strings.length == 0) return offers;
+
+		String prefix = strings[0];
+		if(strings.length == 1) {
+			offers = commands.keySet().stream().filter(cmd -> cmd.startsWith(prefix)).collect(Collectors.toList());
+		}
+
+		if(strings.length == 2 && commands.containsKey(prefix)) {
+			String name = strings[1];
+			for (Map.Entry<String, OfflinePlayer> entries : offlinePlayerMap.entrySet()) {
+				OfflinePlayer player = entries.getValue();
+				if (!player.isOnline() && player.getName() != null && player.getName().substring(0, name.length()).equalsIgnoreCase(name)) {
+					offers.add(entries.getKey());
+				}
+			}
+			if(!commandSender.isOp()) {
+				offers.removeIf(s1 -> !s1.startsWith(commandSender.getName()));
+			}
+		}
+
+		return offers;
 	}
 }

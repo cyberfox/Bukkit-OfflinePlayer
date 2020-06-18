@@ -1,11 +1,10 @@
-main: me.confuser.offlineplayer.OfflinePlayerPlugin
+main: com.cyberfox.offlineplayer.OfflinePlayerPlugin
 name: OfflinePlayer
 version: ${project.version}
-website: http://www.frostcast.net
-authors: [confuserr]
-depend: [PlayerIdAPI]
-softdepend: [Essentials]
+website: http://www.cyberfox.com
+authors: [confuserr, cyberfox]
+depend: [WorldEdit]
 commands:
-  offline:
-    description: "OfflinePlayer base command"
-    usage: "/offline <subCommand> <args>"
+  xoffline:
+    description: "XOffline base command"
+    usage: "/<command> <subCommand> <args>"

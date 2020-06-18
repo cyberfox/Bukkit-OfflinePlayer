@@ -1,15 +1,16 @@
-package me.confuser.offlineplayer.commands;
+package com.cyberfox.offlineplayer.commands;
 
-import me.confuser.offlineplayer.OfflinePlayerFile;
-import me.confuser.offlineplayer.listeners.InventoryEvents;
-import net.frostcast.playeridapi.PlayerIdAPI;
-import net.frostcast.playeridapi.storage.CachedPlayer;
+import com.cyberfox.offlineplayer.OfflinePlayerFile;
+import com.cyberfox.offlineplayer.listeners.InventoryEvents;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+
+import java.util.UUID;
+import java.lang.IllegalArgumentException;
 
 public class EnderChestCommand implements SubCommand {
 
@@ -23,25 +24,25 @@ public class EnderChestCommand implements SubCommand {
 			return true;
 		}
 
-		final String playerName = args[0];
-		final CachedPlayer cachedPlayer = PlayerIdAPI.getByCurrentName(playerName);
-		
-		if (cachedPlayer == null) {
-			sender.sendMessage(ChatColor.RED + playerName + " not found.");
+		final String uuidString = args[0];
+		UUID playerUuid;
+		try {
+			playerUuid = UUID.fromString(uuidString);
+		} catch(IllegalArgumentException badUuid) {
+			sender.sendMessage(ChatColor.RED + "Bad UUID.");
 			return true;
 		}
 
-		if (Bukkit.getPlayer(cachedPlayer.getUuid()) != null) {
-			sender.sendMessage(ChatColor.RED + playerName + " is online!");
+		Player player = Bukkit.getPlayer(playerUuid);
+		if (player != null) {
+			sender.sendMessage(ChatColor.RED + player.getName() + " is online!");
 			return true;
 		}
-		
+
 		Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
-
 			@Override
 			public void run() {
-
-				OfflinePlayerFile player = new OfflinePlayerFile(sender, cachedPlayer.getUuid());
+				OfflinePlayerFile player = new OfflinePlayerFile(sender, playerUuid);
 
 				if (player.getNbt() == null)
 					return;
@@ -54,12 +55,10 @@ public class EnderChestCommand implements SubCommand {
 					public void run() {
 						((Player) sender).openInventory(playerInventory);
 
-						InventoryEvents.openedEnderInvs.put(((Player) sender).getUniqueId(), cachedPlayer.getUuid());
+						InventoryEvents.openedEnderInvs.put(((Player) sender).getUniqueId(), playerUuid);
 					}
-
 				});
 			}
-
 		});
 
 		return true;

@@ -1,8 +1,8 @@
-package me.confuser.offlineplayer.commands;
+package com.cyberfox.offlineplayer.commands;
 
 import java.io.IOException;
 
-import me.confuser.offlineplayer.OfflinePlayerPlugin;
+import com.cyberfox.offlineplayer.OfflinePlayerPlugin;
 
 import org.bukkit.command.CommandSender;
 
